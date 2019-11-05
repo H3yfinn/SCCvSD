@@ -55,11 +55,11 @@ except FileNotFoundError:
     print('Error: can not load .mat file from {}'.format(edge_image_file))
 
 pivot_images = data['pivot_images']
-positive_images = data['positive_images']  # not actually used
+positive_images = data['positive_images']  # not actually used. Finn, in this case they seem to be the same image as pivot_images, which is just an edge image (I teted this by looking at three random images from the file train_10k)
 cameras = data['cameras']
 
 n, c, h, w = pivot_images.shape
-assert (h, w) == (180, 320)
+assert (h, w) == (180, 320)#this will cause problems!
 
 print('Note: assume input image resolution is 180 x 320 (h x w)')
 data_loader = CameraDataset(pivot_images,

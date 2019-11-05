@@ -83,7 +83,7 @@ retrieved_h = IouUtil.template_to_image_homography_uot(retrieved_camera, templat
 
 iou_1 = IouUtil.iou_on_template_uot(gt_h, retrieved_h)
 print('retrieved homogrpahy IoU {:.3f}'.format(iou_1))
-
+print(retrieved_camera_data, model_points, model_line_index)
 retrieved_image = SyntheticUtil.camera_to_edge_image(retrieved_camera_data, model_points, model_line_index,
                                                im_h=720, im_w=1280, line_width=4)
 

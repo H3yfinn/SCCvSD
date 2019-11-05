@@ -1,8 +1,10 @@
 import cv2 as cv
 import numpy as np
 
-from .projective_camera import ProjectiveCamera
-
+try:
+    from projective_camera import ProjectiveCamera
+except:
+    from .projective_camera import ProjectiveCamera
 class IouUtil:
     @staticmethod
     def homography_warp(h, image, dst_size, background_color):
@@ -18,7 +20,7 @@ class IouUtil:
         return im_dst
 
     @staticmethod
-    def template_to_image_homography_uot(camera, template_h=74, template_w=115):
+    def template_to_image_homography_uot(camera, template_h=74, template_w=115):#finn this is interesting
         """
         Only for UofT soccer model
         camera: measured in meter
@@ -52,8 +54,8 @@ class IouUtil:
     def iou_on_template_uot(gt_h, pred_h, im_h=720, im_w=1280, template_h=74, template_w=115):
         im = np.ones((im_h, im_w, 3), dtype=np.uint8) * 255
         gt_mask = IouUtil.homography_warp(np.linalg.inv(gt_h), im, (template_w, template_h), (0))
-        pred_mask = IouUtil.homography_warp(np.linalg.inv(pred_h), im, (template_w, template_h), (0))
-
+        pred_mask = IouUtil.homography_warp(np.linalg.inv(pred_h), im, (template_w, template_h), (0))#finn so np.linalg.inv(pred_h) is the predicted homography from broadcast to topdown!
+        
         val_intersection = (gt_mask != 0) * (pred_mask != 0)
         val_union = (gt_mask != 0) + (pred_mask != 0)
         u = float(np.sum(val_union))
@@ -61,13 +63,14 @@ class IouUtil:
             iou = 0
         else:
             iou = 1.0 * np.sum(val_intersection) / u
+        #cv.imwrite('pred_mask.jpg', pred_mask)#finn added pred_mask to try use as image
         return iou
 
 
 def ut_homography_warp():
     camera_data = np.asarray([640, 360, 3081.976880,
                               1.746393, -0.321347, 0.266827,
-                              52.816224, -54.753716, 19.960425])
+                              52.816224, -54.753716, 19.960425])#finn how to change this?
 
     u, v, fl = camera_data[0:3]
     rod_rot = camera_data[3:6]
@@ -121,7 +124,7 @@ def ut_iou_on_template_uot_2():
     iou = IouUtil.iou_on_template_uot(h1, h2)
     print('{}'.format(iou))
 
-def ut_generate_grassland_mask():
+def ut_generate_grassland_mask():#finn it looks like these are some of the steps towards creating the edge map creator?
     # An example of generate soft mask for grassland segmentation
     import scipy.io as sio
 
@@ -136,8 +139,9 @@ def ut_generate_grassland_mask():
     tempalte_im = np.ones((template_h, template_w, 1), dtype=np.uint8) * 255
 
     grass_mask = IouUtil.homography_warp(homo, tempalte_im, (1280, 720), (0));
-    cv.imshow('grass mask', grass_mask)
-    cv.waitKey(0)
+    cv.imwrite('grass_mask.jpg', grass_mask)
+    #cv.imshow('grass mask', grass_mask)
+    #cv.waitKey(0)
 
     # step 2: generate a 'soft' grass mask
     dist_threshold = 30  # change this value to change mask boundary
@@ -148,15 +152,17 @@ def ut_generate_grassland_mask():
     dist_im[dist_im > dist_threshold] = dist_threshold
     soft_mask = 1.0 - dist_im / dist_threshold  # normalize to [0, 1]
 
-    cv.imshow('soft mask', soft_mask)
-    cv.waitKey(0)
+    cv.imwrite('soft_masked.jpg', soft_mask)
+    #cv.imshow('soft mask', soft_mask)
+    #cv.waitKey(0)
 
     # step 3: soft mask on the original image
     stacked_mask = np.stack((soft_mask,) * 3, axis=-1)
     im = cv.imread('../../data/16.jpg')
     soft_im = cv.multiply(stacked_mask, im.astype(np.float32)).astype(np.uint8)
-    cv.imshow('soft masked image', soft_im)
-    cv.waitKey(0)
+    cv.imwrite('soft_masked_image.jpg', soft_im)#finn mae it so he could see the image in google cloud
+    #cv.imshow('soft masked image', soft_im)
+    #cv.waitKey(0)
 
 
 if __name__ == '__main__':

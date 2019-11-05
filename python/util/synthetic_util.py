@@ -60,7 +60,7 @@ class SyntheticUtil:
         warp = np.eye(3, dtype=np.float32)
         criteria = (cv.TERM_CRITERIA_EPS | cv.TERM_CRITERIA_COUNT, 50, 0.001)
         try:
-            _, warp = cv.findTransformECC(im_src, im_dst, warp, cv.MOTION_HOMOGRAPHY, criteria)
+            _, warp = cv.findTransformECC(im_src, im_dst, warp, cv.MOTION_HOMOGRAPHY, criteria, None, 1)#finn , I changed this and added None, 1) because it was sending error that pos 6 was missing.
         except:
             print('Warning: find transform failed. Set warp as identity')
         return warp
@@ -195,7 +195,7 @@ class SyntheticUtil:
 
         return (pivot_images, positive_images)
 
-def ut_camera_to_edge_image():
+def ut_camera_to_edge_image():#finn how can this be used?
     import scipy.io as sio
     # this camera is from UoT world cup dataset, train, index 16
     camera_data = np.asarray([640,	360, 3081.976880,

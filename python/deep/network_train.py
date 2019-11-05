@@ -132,6 +132,7 @@ def save_checkpoint(state, filename):
 
 pdist = nn.PairwiseDistance(p=2)
 for epoch in range(num_epoch):
+    #print('Epoch {} beginning'.format(epoch))
     net.train()
     train_loader._sample_once()
 
@@ -143,23 +144,33 @@ for epoch in range(num_epoch):
     negative_dist = 0.0
 
     for i in range(len(train_loader)):
+        #if i%1000 == 0: print("training sample {}, epoch {}".format(i, epoch))
         x1, x2, label = train_loader[i]
-
-        x1, x2, label = x1.to(device), x2.to(device), label.to(device)
+        #it's .to that is causing the problems. Which is understandbale, it's within pytorch that this is occuring. Segmentation errors are more likely to occur in C so we're probably onto something
+        try:
+            x1, x2, label = x1.to(device), x2.to(device), label.to(device)
+        except:
+            print('x1', x1, 'x2', x2, 'label', label)
+            
         feat1, feat2 = net(x1, x2)
 
         loss = criterion(feat1, feat2, label)
-
+        #if i%100 == 0: print("[#    ] training sample {}, epoch {}".format(i, epoch))
         optimizer.zero_grad()
+        #if i%100 == 0: print("[##   ]")
         loss.backward()
+        #if i%100 == 0: print("[###  ]")
         optimizer.step()
-
+        #if i%100 == 0: print("[#### ]")
         running_loss += loss.item()
         running_num += len(label)
 
         # distance
         dist = pdist(feat1, feat2)
+        #if i%100 == 0: print("[####]")
+        
         for j in range(len(label)):
+            #if j%100 == 0: print("label {}, epoch {}".format(j, epoch))
             if label[j] == 1:
                 positive_dist += dist[j]
             elif label[j] == 0:

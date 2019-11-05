@@ -1,0 +1,64 @@
+What I changed:
+-inserted None,1 into notebook version of synthetic_utils, def find_transform, cv.findtransformecc
+
+-looking into util/iou_util. Come across ut_homography_warp. Hoping the data in the matrixes can be changed using data from the models?
+
+- it looks like once we find a way to create the edge images and features as found in demo.ipynb then we should be able to begin creating pretty accurate homographys from broadcast to topdown..
+-ut_generate_grassland_mask seemed to convert broadcast images to a black and white mask of just the field. Can that be used as edge map? (at the top of the function it says "An example of generate soft mask for grassland segmentation")
+
+-UPDATE: looks like you have to use a seperate github repo for producing the edge images. it's here: https://github.com/lood339/pytorch-two-GAN
+
+to do
+check this out # as opencv loads in BGR format by default, we want to show it in RGB.
+
+
+
+---------------
+
+
+Just going through demo_uot.ipynb and you can see that the features in the .mat file are being loaded with purple coloring. This can be seen as an example at the bottom of demo_uot.ipynb. I wonder if it will caue problems if the files we input aren't in purple color scheme.
+
+Next step is to find out how to extract deep features from edge images. This, i believe uses the siamese network which the guy who made this hasn't fully implemented yet... guess ive gotta get stuck in (:
+
+production/SCCvSD/python/deep/network_test.py
+python network_test.py \
+--edge-image-file '../test_data/edge_image_file_test.mat' \
+--model-name 'network.pth' \
+--batch-size 64 \
+--cuda-id 0 \
+--save-file '../test_data/feature_test.mat'
+
+(the above script is from network_test.sh)
+
+parser.add_argument('--edge-image-file', required=True, type=str, help='a .mat file')
+parser.add_argument('--model-name', required=True, type=str, help='model name .pth')
+parser.add_argument('--batch-size', required=True, type=int)
+parser.add_argument('--cuda-id', required=True, type=int, default=0, help='CUDA ID 0, 1, 2, 3')
+parser.add_argument('--save-file', required=True, type=str, help='.mat file with')
+
+- I've created this file edge_image_file_test.mat which can be used as edge-image-file. It is created using the code from python/create_edge_image_file_test.py.
+-now I need to train network.pth which is the siamese network model. I have to follow this (from readme.md):
+2. train a network to generate deep feature (optional)   
+Here, we use 10K cameras for an example.   
+cd python/deep   
+python generate_train_data.py  
+Put the generated .mat file to ./data  
+bash network_train.sh 
+It generates a 'network.pth' file.  
+bash network_train.sh 
+It generates a .mat file which has 'features' and 'cameras'.
+
+I think from there I should be gucci since I will have network.pth file which can just be input to the network_test.sh script to get us our test data features from siamese network!!!
+
+-ERROR: getting error when running bash network_train.sh . Error is: network_train.sh: line 10: 11075 Segmentation fault      python network_train.py --train-file '../../data/train_data_10k.mat' --cuda-id 0 --lr 0.01 --num-epoch 10 --batch-size 64 --num-batch 128 --random-seed 0 --resume '' --save-name 'network.pth'
+
+What can be done about this?
+
+-After this error, what next? Need to create a pipe i guess. 
+Pseudo code:
+input broadcast_image into pix2pix
+output edge_map
+input edge_map into create_edge_image_file_test.py
+output edge_map_and_features.mat
+input edge_map_and_features.mat to sccvsd
+output distance image & SOMEHOW input image projected onto template...

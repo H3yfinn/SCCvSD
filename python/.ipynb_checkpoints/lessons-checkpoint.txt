@@ -1,0 +1,9 @@
+How to install new ipykernel for jupyternotebook:
+
+source activate < env_name >
+
+conda install ipykernel
+
+ipython kernel install --name < env_name > --user
+
+use history to see last calls made in bash
